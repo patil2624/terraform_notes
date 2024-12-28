@@ -1,0 +1,79 @@
+
+provider "aws" {
+  region = "ap-southeast-1"
+
+}
+
+resource "aws_vpc" "main" {
+  cidr_block       = "10.0.0.0/25"
+  instance_tenancy = "default"
+
+  tags = {
+    Name = "main"
+  }
+}
+
+resource "aws_subnet" "mainsubnet1" {
+  vpc_id     = aws_vpc.main.id
+  cidr_block = "10.0.1.0/28"
+availability_zone = "ap-southeast-1a"
+  tags = {
+    Name = "Mainsubnet1"
+  }
+}
+
+resource "aws_subnet" "mainsubnet2" {
+  vpc_id     = aws_vpc.main.id
+  cidr_block = "10.0.1.0/28"
+availability_zone = "ap-southeast-1b"
+  tags = {
+    Name = "Mainsubnet2"
+  }
+}
+
+
+resource "aws_subnet" "mainsubnet3" {
+  vpc_id     = aws_vpc.main.id
+  cidr_block = "10.0.1.0/28"
+availability_zone = "ap-southeast-1b"
+  tags = {
+    Name = "Mainsubnet3"
+  }
+}
+
+resource "aws_internet_gateway" "gw" {
+  vpc_id = aws_vpc.main.id
+
+  tags = {
+    Name = "maingw"
+  }
+}
+
+
+resource "aws_nat_gateway" "nat-gw" {
+  connectivity_type = "private"
+  subnet_id         = aws_subnet.mainsubnet2.id
+}
+
+
+
+resource "aws_route_table" "example" {
+  vpc_id = aws_vpc.main.id
+
+  route {
+    cidr_block = "10.0.1.0/28"
+    gateway_id = aws_internet_gateway.gw.id
+  }
+}
+
+
+resource "aws_route_table_association" "a" {
+  subnet_id      = aws_subnet.mainsubnet1.id
+  route_table_id = aws_route_table.example.id
+}
+
+resource "aws_route_table_association" "b" {
+  subnet_id      = aws_subnet.mainsubnet3.id
+  route_table_id = aws_route_table.example.id
+}
+
